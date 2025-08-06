@@ -1,0 +1,12 @@
+API_KEY = "YOUR_API_KEY"
+
+TVBLACK = "#000000"
+TVWHITE = "#dbdbdb"
+TVRED = "#df484c"
+TVPINK = "#eb5181"
+TVORANGE = "#f3af56"
+TVBLUE = "#4577ed"
+TVLIGHTBLUE = "#6a9aef"
+TVGREEN = "#56af9c"
+TVDARKGREEN = "#449782"
+TVGRAY = "#2e2e2e"
