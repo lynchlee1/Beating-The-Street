@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stock Dashboard</title>
+  <style>
+    :root {
+      --bg: {{BG}};
+      --panel: {{PANEL}};
+      --text: {{TEXT}};
+      --accent: {{ACCENT}};
+      --ring: rgba(111,195,255,.35);
+      --card-radius: 16px;
+      --gap: 8px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg, #0a0a0a, #000);
+      color: var(--text);
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: var(--gap);
+      padding: 8px; 
+    }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .brand { font-size: 22px; letter-spacing: .6px; font-weight: 700; }
+    .footer-note { color: var(--text); font-size: 11px; text-align: right; margin-top: -6px; }
+
+    .toolbar { display: grid; gap: 10px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    .chip {
+      border: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+      color: var(--text);
+      padding: 9px 14px; border-radius: 999px; cursor: pointer; user-select: none;
+      white-space: nowrap; font-weight: 600; font-size: 14px;
+      transition: border-color .2s ease, background .2s ease;
+    }
+    .chip:hover { border-color: var(--ring); }
+    .chip.active {
+      background: linear-gradient(180deg, rgba(111,195,255,.25), rgba(111,195,255,.08));
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--ring) inset, 0 10px 30px -10px rgba(111,195,255,.35);
+    }
+
+    .subchip { font-size: 12px; padding: 7px 11px; }
+
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; gap: var(--gap); min-height: 0; height: calc(100vh - 170px); }
+
+    .card { position: relative; background: var(--panel); border: 1px solid rgba(255,255,255,.08); border-radius: var(--card-radius); overflow: hidden; min-height: 260px; }
+    .card-header { display: flex; align-items: center; justify-content: flex-start; padding: 10px 12px; gap: 8px; background: linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,0)); }
+    .card-title { font-weight: 700; font-size: 15px; letter-spacing: .3px; color: var(--text); }
+    .card-body { position: absolute; inset: -20px 0 0; padding: 0px 12px; }
+    .content { width: 100%; height: 100%; border-radius: 10px; overflow: hidden; display: grid; place-items: center; background: rgba(255,255,255,.02); }
+    .content img { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+
+    .content.has-table {
+      align-items: start;
+      margin: 30px 0px;
+    }
+
+    table.pretty { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+    .pretty th { text-align: left; font-size: 12px; color: var(--text); font-weight: 700; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,.1); background: rgba(111,195,255,.07); }
+    .pretty td { padding: 8px 10px; color: var(--text); border-bottom: 1px dashed rgba(255,255,255,.06); }
+    .pretty tr:hover { background: transparent; cursor: default; }
+    .pretty td:first-child, .pretty th:first-child { width: 40%; }
+
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; height: auto; } .card { min-height: 220px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand" id="tickerDisplay">TICKER</div>
+    <div class="footer-note">Single-file, no deps.</div>
+  </header>
+
+  <section class="toolbar">
+    <div class="row" id="mainButtons" aria-label="Main Buttons"></div>
+    <div class="row" id="subButtons" aria-label="Sub Buttons"></div>
+  </section>
+
+  <section class="grid" id="grid">
+    <div class="card" data-slot="s1">
+      <div class="card-body"><div class="content"></div></div>
+    </div>
+    <div class="card" data-slot="s2">
+      <div class="card-body"><div class="content"></div></div>
+    </div>
+    <div class="card" data-slot="s3">
+      <div class="card-body"><div class="content"></div></div>
+    </div>
+    <div class="card" data-slot="s4">
+      <div class="card-body"><div class="content"></div></div>
+    </div>
+  </section>
+
+  <script>
+    let DASHBOARD_DATA = {};
+    let activeMain = null;
+    let activeSub = null;
+
+    function renderButtons() {
+      const mainRow = document.getElementById('mainButtons');
+      const subRow = document.getElementById('subButtons');
+      mainRow.innerHTML = '';
+      subRow.innerHTML = '';
+      const mains = Object.keys(DASHBOARD_DATA?.config || {});
+      mains.forEach(key => {
+        const b = document.createElement('button');
+        b.className = 'chip' + (key === activeMain ? ' active' : '');
+        b.textContent = key;
+        b.onclick = () => {
+          activeMain = key;
+          const subs = Object.keys(DASHBOARD_DATA.config[activeMain] || {});
+          activeSub = subs[0];
+          renderButtons();
+          renderGrid();
+        };
+        mainRow.appendChild(b);
+      });
+      if (!activeMain) return;
+      (Object.keys(DASHBOARD_DATA.config[activeMain] || {})).forEach(key => {
+        const b = document.createElement('button');
+        b.className = 'chip subchip' + (key === activeSub ? ' active' : '');
+        b.textContent = key;
+        b.onclick = () => { activeSub = key; renderButtons(); renderGrid(); };
+        subRow.appendChild(b);
+      });
+    }
+
+    function renderGrid() {
+      if (!activeMain || !activeSub) return;
+      const node = DASHBOARD_DATA?.config?.[activeMain]?.[activeSub] ?? {};
+      document.getElementById('grid').querySelectorAll('.card').forEach(card => {
+        const slot = card.getAttribute('data-slot');
+        const def = node[slot];
+        const body = card.querySelector('.content');
+        const title = card.querySelector('.card-title');
+        body.innerHTML = '';
+        body.classList.remove('has-table');
+        if (!def) { body.innerHTML = `<div style='opacity:.65'>No data for ${slot}</div>`; return; }
+        if (def.type === 'img') { const img=document.createElement('img'); img.src=def.src; body.appendChild(img); }
+        else if (def.type === 'table') {
+          body.classList.add('has-table');
+          body.appendChild(makeTable(def.columns, def.rows));
+        }
+        else if (def.type === 'html') { body.innerHTML = def.html; }
+      });
+    }
+
+    function makeTable(cols=[],rows=[]) {
+      const table=document.createElement('table'); table.className='pretty';
+      const tbody=document.createElement('tbody');
+      rows.forEach((r, isFirstRow) => {
+        const tr=document.createElement('tr');
+        const rowLabel = (r[0] || '').toString();
+        const isGrowthRow = rowLabel.includes('Growth');
+        r.forEach((v, cIdx)=>{
+          const cell = document.createElement(isFirstRow === 0 ? 'th' : 'td');
+          if (typeof v === 'string' && v.startsWith('\t')) {
+            cell.style.paddingLeft = '2.5em';
+            cell.textContent = v.trim();
+          } else {
+            cell.textContent = v;
+          }
+          if (isGrowthRow && cIdx > 0 && typeof v === 'string' && v.endsWith('%')) {
+            const num = parseFloat(v.replace('%', ''));
+            if (!isNaN(num)) {
+              cell.style.opacity = "1.0";
+              cell.style.color = num > 0 ? "#56af9c" : "#df484c";
+            }
+          }
+          tr.appendChild(cell);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody); return table;
+    }
+
+    window.loadDashboardData = function(obj, opts={}) {
+      DASHBOARD_DATA = JSON.parse(JSON.stringify(obj||{}));
+      document.getElementById('tickerDisplay').textContent = 'Stock Report: ' + (DASHBOARD_DATA.ticker || 'TICKER');
+      const mains = Object.keys(DASHBOARD_DATA.config||{});
+      activeMain = mains[0]||null;
+      activeSub = activeMain ? Object.keys(DASHBOARD_DATA.config[activeMain])[0] : null;
+      renderButtons();
+      renderGrid();
+    };
+  </script>
+</body>
+</html>
