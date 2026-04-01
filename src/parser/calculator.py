@@ -45,7 +45,7 @@ Output schema
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 
@@ -503,13 +503,13 @@ def build_parsed_data(raw: dict) -> dict:
     # Uses 3Y/5Y/10Y/13Y/20Y averages of three valuation proxies
     _t1_series = _calc_trailing_series(fiscal_dates, ni, order=(0, 1), trailing_length=1)
     _div_shs_series = _calc_trailing_series(
-        fiscal_dates, aligned_div, num2=shs, order=(1, 1), trailing_length=1
+        fiscal_dates, aligned_div, shs, order=(1, 1), trailing_length=1
     )
     _shsd_series = _calc_trailing_series(fiscal_dates, shsd, order=(1, 0), trailing_length=1)
-    _depsdil_series = _calc_trailing_series(fiscal_dates, ni, den1=shsd, order=(-1, 1), trailing_length=1)
+    _depsdil_series = _calc_trailing_series(fiscal_dates, ni, den1_dict=shsd, order=(-1, 1), trailing_length=1)
     _div_series = _calc_trailing_series(fiscal_dates, aligned_div, trailing_length=1)
-    _payout_series = _calc_trailing_series(fiscal_dates, aligned_div, num2=shs, den1=ni, order=(1, 0), trailing_length=1)
-    _per_series = _calc_trailing_series(fiscal_dates, aligned_mcap, den1=ni, order=(1, -1), trailing_length=1)
+    _payout_series = _calc_trailing_series(fiscal_dates, aligned_div, shs, den1_dict=ni, order=(1, 0), trailing_length=1)
+    _per_series = _calc_trailing_series(fiscal_dates, aligned_mcap, den1_dict=ni, order=(1, -1), trailing_length=1)
 
     box_groups: dict = {}
     for label, length in _WINDOWS:
@@ -603,7 +603,7 @@ def build_parsed_data(raw: dict) -> dict:
 
     return {
         "ticker":           ticker,
-        "generatedAt":      datetime.utcnow().isoformat() + "Z",
+        "generatedAt":      datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "fiscalDates":      fiscal_dates,
         "chartData":        chart_data,
         "availableMetrics": available_metrics,

@@ -88,6 +88,34 @@ cd src/ui && npm run dev
 # Open http://localhost:5173
 ```
 
+## Demo Report (No API Key Required)
+
+Generate a fully offline HTML report from synthetic sample data — useful for testing
+the UI, CI, or just exploring the dashboard without a real ticker:
+
+```bash
+python tests/generate_demo_report.py                    # uses DEMO ticker, 80 quarters
+python tests/generate_demo_report.py --ticker ACME      # custom name
+python tests/generate_demo_report.py --output /tmp/demo.html
+```
+
+## Testing
+
+Run the unit-test suite with `pytest` (no API key or network needed):
+
+```bash
+pip install pytest
+python -m pytest tests/ -v
+```
+
+| File | What it covers |
+|---|---|
+| `tests/test_calculator.py` | Parser helpers, trailing series, averages, growth, `build_parsed_data` end-to-end |
+| `tests/test_html_injector.py` | HTML injection, missing template, Unicode, large payloads |
+| `tests/test_fetcher.py` | `BaseFinancialClient` ABC, FMPClient env-var checks, `fetch_all` sentinel returns |
+| `tests/fixtures/sample_raw.py` | 80-quarter synthetic DEMO Corp data used by all tests |
+| `tests/generate_demo_report.py` | Generates a real demo report HTML from sample data |
+
 ## Adding a New Data Provider
 
 1. Create a new file in `src/fetcher/`, e.g. `src/fetcher/my_provider.py`.
