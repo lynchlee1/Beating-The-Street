@@ -1,0 +1,45 @@
+/* ────────────────────────────────────────────────────────────────────────────
+   Global styles — dark financial terminal theme
+   ──────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --bg:        #0a0a0f;
+  --surface:   #111118;
+  --surface2:  #1a1a24;
+  --border:    rgba(255,255,255,.08);
+  --text:      #e2e2e8;
+  --text-dim:  #7c7c96;
+  --accent:    #4f8ef7;
+  --accent2:   #56c99c;
+  --warn:      #f5a623;
+  --danger:    #ef5350;
+  --radius:    12px;
+  --gap:       10px;
+  font-size:   14px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+/* scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 3px; }
+
+/* Recharts tooltip */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: var(--surface2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  color: var(--text) !important;
+  font-size: 12px !important;
+}
